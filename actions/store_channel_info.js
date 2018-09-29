@@ -6,7 +6,7 @@ module.exports = {
 // This is the name of the action displayed in the editor.
 //---------------------------------------------------------------------
 
-name: "Store Channel Info Things",
+name: "Store Channel Info",
 
 //---------------------------------------------------------------------
 // Action Section
@@ -17,6 +17,28 @@ name: "Store Channel Info Things",
 section: "Channel Control",
 
 //---------------------------------------------------------------------
+// DBM Mods Manager Variables (Optional but nice to have!)
+//
+// These are variables that DBM Mods Manager uses to show information
+// about the mods for people to see in the list.
+//---------------------------------------------------------------------
+
+// Who made the mod (If not set, defaults to "DBM Mods")
+author: "DBM & Lasse",
+
+// The version of the mod (Defaults to 1.0.0)
+version: "1.9", //Added in 1.9
+
+// A short description to show on the mod line for this mod (Must be on a single line)
+short_description: "Default action! Modified!",
+
+// If it depends on any other mods by name, ex: WrexMODS if the mod uses something from WrexMods
+
+
+//---------------------------------------------------------------------
+
+
+//---------------------------------------------------------------------
 // Action Subtitle
 //
 // This function generates the subtitle displayed next to the name.
@@ -24,30 +46,9 @@ section: "Channel Control",
 
 subtitle: function(data) {
 	const channels = ['Same Channel', 'Mentioned Channel', '1st Server Channel', 'Temp Variable', 'Server Variable', 'Global Variable'];
-	const info = ['Channel Creation Date', 'On which Server is Channel?', 'Channel Is Deleteable?', 'Channel Category', 'Channel Type'];
+	const info = ['Channel Object', 'Channel ID', 'Channel Name', 'Channel Topic', 'Channel Last Message', 'Channel Position', 'Channel Is NSFW?', 'Channel Is DM', 'Channel Category Name', 'Channel Rate Limit Per User', 'Channel Creation Date'];
 	return `${channels[parseInt(data.channel)]} - ${info[parseInt(data.info)]}`;
 },
-
-//---------------------------------------------------------------------
-	 // DBM Mods Manager Variables (Optional but nice to have!)
-	 //
-	 // These are variables that DBM Mods Manager uses to show information
-	 // about the mods for people to see in the list.
-	 //---------------------------------------------------------------------
-
-	 // Who made the mod (If not set, defaults to "DBM Mods")
-	 author: "EliteArtz & Lasse",
-
-	 // The version of the mod (Defaults to 1.0.0)
-	 version: "1.8.7", //Added in 1.8.3
-
-	 // A short description to show on the mod line for this mod (Must be on a single line)
-	 short_description: "Stores Channels Information",
-
-	 // If it depends on any other mods by name, ex: WrexMODS if the mod uses something from WrexMods
-
-
-	 //---------------------------------------------------------------------
 
 //---------------------------------------------------------------------
 // Action Storage Function
@@ -62,20 +63,34 @@ variableStorage: function(data, varType) {
 	let dataType = 'Unknown Type';
 	switch(info) {
 		case 0:
-			dataType = "Date";
+			dataType = "Channel";
 			break;
 		case 1:
-			dataType = "Guild";
+			dataType = "Channel ID";
 			break;
 		case 2:
-			dataType = "Boolean";
-			break;
 		case 3:
-			dataType = "Category";
+			dataType = "Text";
 			break;
 		case 4:
+			dataType = "Message";
+			break;
+		case 5:
+			dataType = "Number";
+			break;
+		case 6:
+			dataType = "Boolean";
+			break;
+		case 8:
 			dataType = "Text";
-	}
+			break;
+		case 9: 
+			dataType = "Number";
+			break;
+		case 10:
+			dataType = "Date";
+			break;
+		}
 	return ([data.varName2, dataType]);
 },
 
@@ -93,26 +108,21 @@ fields: ["channel", "varName", "info", "storage", "varName2"],
 // Command HTML
 //
 // This function returns a string containing the HTML used for
-// editting actions.
+// editting actions. 
 //
 // The "isEvent" parameter will be true if this action is being used
-// for an event. Due to their nature, events lack certain information,
+// for an event. Due to their nature, events lack certain information, 
 // so edit the HTML to reflect this.
 //
-// The "data" parameter stores constants for select elements to use.
+// The "data" parameter stores constants for select elements to use. 
 // Each is an array: index 0 for commands, index 1 for events.
-// The names are: sendTargets, members, roles, channels,
+// The names are: sendTargets, members, roles, channels, 
 //                messages, servers, variables
 //---------------------------------------------------------------------
 
 html: function(isEvent, data) {
 	return `
-	<div>
-		<p>
-			<u>Mod Info:</u><br>
-			Created by EliteArtz and Lasse!
-		</p>
-	</div><br>
+<div><p>This action has been modified by DBM Mods.</p></div><br>
 <div>
 	<div style="float: left; width: 35%;">
 		Source Channel:<br>
@@ -129,11 +139,17 @@ html: function(isEvent, data) {
 	<div style="padding-top: 8px; width: 70%;">
 		Source Info:<br>
 		<select id="info" class="round">
-			<option value="0" selected>Channel Creation Date</option>
-			<option value="1">On which Server is Channel?</option>
-			<option value="2">Channel Is Deleteable?</option>
-			<option value="3">Channel Category</option>
-			<option value="4">Channel Type</option>
+			<option value="0" selected>Channel Object</option>
+			<option value="1">Channel ID</option>
+			<option value="2">Channel Name</option>
+			<option value="3">Channel Topic</option>
+			<option value="4">Channel Last Message</option>
+			<option value="5">Channel Position</option>
+			<option value="6">Channel Is NSFW?</option>
+			<option value="7">Channel Is DM?</option>
+			<option value="8">Channel Category Name</option>
+			<option value="9">Channel Rate Limit Per User</option>
+			<option value="10">Channel Creation Date</option>
 		</select>
 	</div>
 </div><br>
@@ -169,12 +185,13 @@ init: function() {
 // Action Bot Function
 //
 // This is the function for the action within the Bot's Action class.
-// Keep in mind event calls won't have access to the "msg" parameter,
+// Keep in mind event calls won't have access to the "msg" parameter, 
 // so be sure to provide checks for variable existance.
 //---------------------------------------------------------------------
 
 action: function(cache) {
 	const data = cache.actions[cache.index];
+	const DiscordJS = this.getDBM().DiscordJS;
 	const channel = parseInt(data.channel);
 	const varName = this.evalMessage(data.varName, cache);
 	const info = parseInt(data.info);
@@ -186,29 +203,55 @@ action: function(cache) {
 	let result;
 	switch(info) {
 		case 0:
-			result = targetChannel.createdAt;
+			result = targetChannel;
 			break;
 		case 1:
-			result = targetChannel.guild;
+			result = targetChannel.id;
 			break;
 		case 2:
-			result = targetChannel.deletable;
+			result = targetChannel.name;
 			break;
 		case 3:
-			result = targetChannel.parent;
+			result = targetChannel.topic;
 			break;
-		case 4:
-			result = targetChannel.type;
+		case 5:
+			result = targetChannel.position;
+			break;
+		case 6:
+			result = targetChannel.nsfw;
+			break;
+		case 7:
+			result = (targetChannel instanceof DiscordJS.GroupDMChannel || targetChannel instanceof DiscordJS.DMChannel);
+			break;
+		case 8:
+			if(targetChannel.parent.name !== undefined) {
+				result = targetChannel.parent.name;
+			}
+			break;
+		case 9:
+			result = targetChannel.rateLimitPerUser;
+			break;
+		case 10:
+			result = targetChannel.createdAt;
 			break;
 		default:
 			break;
 	}
-	if(result !== undefined) {
+	if(info === 4) {
+		targetChannel.fetchMessage(targetChannel.lastMessageID).then(function(resultMessage) {
+			const storage = parseInt(data.storage);
+			const varName2 = this.evalMessage(data.varName2, cache);
+			this.storeValue(resultMessage, storage, varName2, cache);
+			this.callNextAction(cache);
+		}.bind(this)).catch(this.displayError.bind(this, data, cache));
+	} else if(result !== undefined) {
 		const storage = parseInt(data.storage);
 		const varName2 = this.evalMessage(data.varName2, cache);
 		this.storeValue(result, storage, varName2, cache);
+		this.callNextAction(cache);
+	} else {
+		this.callNextAction(cache);
 	}
-	this.callNextAction(cache);
 },
 
 //---------------------------------------------------------------------
